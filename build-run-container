@@ -26,6 +26,11 @@ fi
 DOCKER=/usr/bin/docker
 $DOCKER images -q "$NAME" | grep . > /dev/null \
 	|| $DOCKER build -t "$NAME" "$SOURCE_DIR" > /dev/null
+
+RUN_OPTS="$( $DOCKER inspect --format '{{ .Config.Labels.RUN_OPTS }}' $NAME )"
+if [ "$RUN_OPTS" == "<no value>" ] ; then
+	RUN_OPTS=''
+fi
 $DOCKER run --rm --read-only \
 	--user="$SUDO_UID":"$SUDO_GID" --security-opt=label=type:spc_t \
-	-v "${PWD}:/data" "$NAME" "$@"
+	-v "${PWD}:/data" $RUN_OPTS "$NAME" "$@"
