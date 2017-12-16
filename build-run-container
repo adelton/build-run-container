@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Build and run container from source (Dockerfile) under
+# /usr/local/share/container-sources/$NAME.
+#
+# Expected invocation is by symlinking build-run-container-sudo
+# with the name of the command (== container) to run.
+
+set -e
+if [ -z "$SUDO_UID" ] ; then
+	echo "$0: invoke via sudo." >&2
+	exit 1
+fi
+NAME="$1"
+shift
+if ! [[ "$NAME" =~ ^[-a-zA-Z0-9]+$ ]] ; then			# sanity check
+	echo "$0: pass correct container source directory name." >&2
+	exit 2
+fi
+SOURCE_DIR="/usr/local/share/container-sources/$NAME"
+if ! [ -f "$SOURCE_DIR/Dockerfile" ] ; then			# access check
+	echo "$0: no $NAME container source." >&2
+	exit 3
+fi
+
+DOCKER=/usr/bin/docker
+$DOCKER images -q "$NAME" | grep . > /dev/null \
+	|| $DOCKER build -t "$NAME" "$SOURCE_DIR" > /dev/null
+$DOCKER run --rm --read-only \
+	--user="$SUDO_UID":"$SUDO_GID" --security-opt=label=type:spc_t \
+	-v "${PWD}:/data" "$NAME" "$@"

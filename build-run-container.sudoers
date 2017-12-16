@@ -1,0 +1,3 @@
+
+ALL ALL=(root) NOPASSWD: /usr/local/bin/build-run-container
+

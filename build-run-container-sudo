@@ -1,0 +1,2 @@
+#!/bin/bash
+exec /usr/bin/sudo --preserve-env=HOME /usr/local/bin/build-run-container "${0##*/}" "$@"
