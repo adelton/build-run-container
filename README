@@ -1,0 +1,53 @@
+
+Running commands containerized
+==============================
+
+Rarely-used commands do not need to be installed in the workstation
+or laptop operating system. They can be defined as Dockerfiles
+and built into container images and used only when needed.
+
+New command is added by:
+
+* Putting sources to a particular subdirectory:
+
+```
+# /usr/local/share/container-sources/svn/Dockerfile
+FROM registry.fedoraproject.org/fedora:latest
+RUN dnf install -y subversion && dnf clean all
+WORKDIR /data
+ENTRYPOINT [ "/usr/bin/svn" ]
+```
+
+* For convenience, make a symlink in `$PATH`
+
+```
+# ln -s build-run-container-sudo /usr/local/bin/svn
+```
+
+* Run the command:
+
+```
+$ svn checkout http://svn.apache.org/repos/asf/httpd/httpd/trunk httpd-trunk
+```
+
+---
+
+# Installation
+
+This repository contains [build-run-container](build-run-container) script
+which is expected to run as root via `sudo`. It builds the container image
+and then executes the command in the container with the identity of the
+invoking user.
+
+To help with running [build-run-container](build-run-container), tiny
+wrapper [build-run-container-sudo](build-run-container-sudo) which just
+executes it with `sudo` is also provided.
+
+So give access to users on the machine to the build-and-run mechanism,
+`sudo` needs to be configured, for example with
+
+```
+# /etc/sudoers.d/build-run-container
+ALL ALL=(root) NOPASSWD: /usr/local/bin/build-run-container
+```
+
