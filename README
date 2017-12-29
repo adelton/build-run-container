@@ -48,6 +48,6 @@ So give access to users on the machine to the build-and-run mechanism,
 
 ```
 # /etc/sudoers.d/build-run-container
-ALL ALL=(root) NOPASSWD: /usr/local/bin/build-run-container
+ALL ALL=(root) NOPASSWD:SETENV: /usr/local/bin/build-run-container
 ```
 
