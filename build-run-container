@@ -33,6 +33,13 @@ RUN_OPTS=( $( $DOCKER inspect --format '{{ .Config.Labels.RUN_OPTS }}' $NAME ) )
 if [ "${RUN_OPTS[*]}" == "<no value>" ] ; then
 	RUN_OPTS=()
 fi
+
+VOLUME_OPTS=()
+WORKDIR="$( $DOCKER inspect --format '{{ .Config.WorkingDir }}' $NAME )"
+if [ -n "$WORKDIR" ] ; then
+	VOLUME_OPTS=( -v "${PWD}:${WORKDIR}" )
+fi
+
 $DOCKER run --rm --read-only \
 	--user="$SUDO_UID":"$SUDO_GID" --security-opt=label=type:spc_t \
-	-v "${PWD}:/data" ${RUN_OPTS[@]/#~\//"$HOME/"} "$NAME" "$@"
+	"${VOLUME_OPTS[@]}" ${RUN_OPTS[@]/#~\//"$HOME/"} "$NAME" "$@"
