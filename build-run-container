@@ -25,14 +25,17 @@ if ! [ -f "$SOURCE_DIR/Dockerfile" ] ; then			# access check
 fi
 
 DOCKER=/usr/bin/docker
-$DOCKER images -q "$NAME" | grep . > /dev/null \
-	|| $DOCKER build -t "$NAME" "$SOURCE_DIR" > /dev/null
+IMAGE="$NAME-$SUDO_UID-$SUDO_GID"
+$DOCKER images -q "$IMAGE" | grep . > /dev/null \
+	|| $DOCKER build -t "$IMAGE" \
+		--build-arg=UID="$SUDO_UID" --build-arg=GID="$SUDO_GID" \
+		"$SOURCE_DIR" > /dev/null
 
 # storing RUN_OPTS in a array for easy expansion of ~/'s to $HOME
-RUN_OPTS=( $( $DOCKER inspect --format '{{ .Config.Labels.RUN_OPTS }}' $NAME ) )
+RUN_OPTS=( $( $DOCKER inspect --format '{{ .Config.Labels.RUN_OPTS }}' "$IMAGE" ) )
 if [ "${RUN_OPTS[*]}" == "<no value>" ] ; then
 	RUN_OPTS=()
 fi
 $DOCKER run --rm --read-only \
 	--user="$SUDO_UID":"$SUDO_GID" --security-opt=label=type:spc_t \
-	-v "${PWD}:/data" ${RUN_OPTS[@]/#~\//"$HOME/"} "$NAME" "$@"
+	-v "${PWD}:/data" ${RUN_OPTS[@]/#~\//"$HOME/"} "$IMAGE" "$@"
